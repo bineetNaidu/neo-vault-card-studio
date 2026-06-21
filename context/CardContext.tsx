@@ -7,7 +7,8 @@ const defaultCards: Card[] = [
   {
     id: "card-1",
     theme: "obsidian",
-    bankLogo: "apple", // We will map these to SVGs later
+    bankLogo: "apple",
+    pattern: "none",
     cardNumber: "•••• •••• •••• 9021",
     cardHolder: "ALEXANDER NEWMAN",
     expiry: "12/28",
@@ -17,6 +18,7 @@ const defaultCards: Card[] = [
     id: "card-2",
     theme: "frosted",
     bankLogo: "chase",
+    pattern: "none",
     cardNumber: "•••• •••• •••• 4432",
     cardHolder: "ALEXANDER NEWMAN",
     expiry: "09/29",
@@ -26,6 +28,7 @@ const defaultCards: Card[] = [
     id: "card-3",
     theme: "prism",
     bankLogo: "amex",
+    pattern: "none",
     cardNumber: "•••• •••• •••• 8888",
     cardHolder: "ALEXANDER NEWMAN",
     expiry: "01/30",
@@ -55,6 +58,7 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
       id: `card-${Date.now()}`,
       theme: initialTheme,
       bankLogo: "generic",
+      pattern: "none",
       cardNumber: "•••• •••• •••• 0000",
       cardHolder: "NEW CARDHOLDER",
       expiry: "MM/YY",
