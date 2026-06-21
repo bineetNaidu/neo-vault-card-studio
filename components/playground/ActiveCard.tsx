@@ -153,7 +153,10 @@ export default function ActiveCard() {
                 transform: "rotateY(180deg) translateZ(1px)",
               }}
             >
-              <div className="absolute inset-0 rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800">
+              <div 
+                className={`absolute inset-0 rounded-2xl overflow-hidden border border-white/10 shadow-inner ${themeStyles[activeCard.theme]}`}
+                style={baseBgStyle}
+              >
                 <PatternRenderer pattern={activeCard.pattern} />
                 <CardNoise />
 
@@ -161,13 +164,13 @@ export default function ActiveCard() {
                 
                 <div className="absolute inset-0 p-7 flex flex-col justify-between z-40">
                   <div className="mt-20 flex items-center justify-end gap-4 w-full relative">
-                    <span className="text-[10px] tracking-widest uppercase opacity-40">Security Code</span>
+                    <span className="text-[10px] tracking-widest uppercase opacity-40 drop-shadow-md">Security Code</span>
                     <div className={`${getFocusStyle("cvv")} bg-white text-black font-mono text-sm px-4 py-2 rounded font-bold tracking-widest shadow-inner h-10 flex items-center justify-center`} onClick={() => setFocusedField("cvv")}>
                       {activeCard.cvv || "•••"}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 opacity-30 mt-auto relative">
+                  <div className="flex items-center gap-2 opacity-50 mt-auto relative drop-shadow-md">
                     <ShieldCheck size={16} />
                     <p className="text-[9px] tracking-widest uppercase leading-tight">
                       Secured Network Layer <br/> Issued by Authorization Vault
