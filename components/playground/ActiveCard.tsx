@@ -109,12 +109,18 @@ export default function ActiveCard() {
   const handleExport = async () => {
     if (!cardRef.current) return;
     try {
+      // 1. Tell React to strip all 3D CSS and flatten the card
       setIsExporting(true);
+      
+      // 2. Give the browser 150ms to completely repaint the layout in 2D
+      await new Promise(resolve => setTimeout(resolve, 150));
+
       const node = cardRef.current;
       const scaleFactor = 4; 
       const ultraHdWidth = node.offsetWidth * scaleFactor;
       const ultraHdHeight = node.offsetHeight * scaleFactor;
 
+      // 3. Take the ultra-HD snapshot of the now-flat 2D element
       const dataUrl = await toPng(node, { 
         cacheBust: true, 
         pixelRatio: 1, 
@@ -136,6 +142,7 @@ export default function ActiveCard() {
     } catch (err) {
       console.error('Failed to export image', err);
     } finally {
+      // 4. Instantly restore all 3D physics
       setIsExporting(false);
     }
   };
@@ -185,20 +192,24 @@ export default function ActiveCard() {
       <div ref={cardRef} 
         className="relative p-4 -m-4" 
         style={{ 
-          perspective: "1500px",
+          perspective: isExporting ? "none" : "1500px", // Flattens the camera
           width: CARD_WIDTH, 
           height: CARD_HEIGHT,
         }}>
         <motion.div
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+          style={{ 
+            rotateX: isExporting ? 0 : rotateX, 
+            rotateY: isExporting ? 0 : rotateY, 
+            transformStyle: isExporting ? "flat" : "preserve-3d" // Flattens outer shell 
+           }}
           className="w-full h-full relative"
         >
           {/* Base Black Drop Shadow */}
           <div 
             className="absolute inset-0 rounded-2xl bg-black/60 blur-2xl pointer-events-none"
-            style={{ transform: "translateZ(-30px)" }}
+            style={{ transform: isExporting ? "none" : "translateZ(-30px)" }}
           />
 
           {/* Dynamic Ambient Glow */}
@@ -211,28 +222,36 @@ export default function ActiveCard() {
                   activeCard.theme === 'prism' ? '#c084fc' : 
                   activeCard.theme === 'frosted' ? '#e0f2fe' : 
                   'rgba(255,255,255,0.1)', 
-                transform: "translateZ(-50px)",
-                x: shadowX, 
-                y: shadowY, 
+                transform: isExporting ? "none" : "translateZ(-50px)",
+                x: isExporting ? 0 : shadowX, 
+                y: isExporting ? 0 : shadowY, 
               }}
             />
           )}
 
           {/* INNER CORE: Replaced `animate` with custom `flipSpring` */}
           <motion.div
-            style={{ rotateY: flipSpring, transformStyle: "preserve-3d" }}
+           style={{ 
+              rotateY: isExporting ? 0 : flipSpring, // Stop physical rotation during export
+              transformStyle: isExporting ? "flat" : "preserve-3d" 
+            }}
             className="absolute inset-0 w-full h-full"
           >
             
             {/* ================= FRONT FACE ================= */}
             <div 
               className="absolute inset-0"
-              style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "translateZ(1px)" }}
+              style={{ 
+                backfaceVisibility: isExporting ? "visible" : "hidden", 
+                WebkitBackfaceVisibility: isExporting ? "visible" : "hidden", 
+                transform: isExporting ? "none" : "translateZ(1px)",
+                display: isExporting && isFlipped ? "none" : "block" // Hide front if we are exporting the back
+              }}
             >
               {/* Applied blurFilter inside the safe non-3D child container */}
               <motion.div 
                 className={`absolute inset-0 rounded-2xl overflow-hidden border border-white/10 shadow-inner ${themeStyles[activeCard.theme]}`}
-                style={{ ...baseBgStyle, filter: blurFilter }}
+                style={{ ...baseBgStyle, filter: isExporting ? "none" : blurFilter }}
               >
                 <PatternRenderer pattern={activeCard.pattern} />
                 <CardNoise />
@@ -278,12 +297,17 @@ export default function ActiveCard() {
             {/* ================= BACK FACE ================= */}
             <div 
               className="absolute inset-0 text-white"
-              style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "rotateY(180deg) translateZ(1px)" }}
+              style={{ 
+                backfaceVisibility: isExporting ? "visible" : "hidden", 
+                WebkitBackfaceVisibility: isExporting ? "visible" : "hidden", 
+                transform: isExporting ? "none" : "rotateY(180deg) translateZ(1px)",
+                display: isExporting && !isFlipped ? "none" : "block" // Hide back if we are exporting the front
+              }}
             >
               {/* Applied blurFilter here as well */}
               <motion.div 
                 className={`absolute inset-0 rounded-2xl overflow-hidden border border-white/10 shadow-inner ${themeStyles[activeCard.theme]}`}
-                style={{ ...baseBgStyle, filter: blurFilter }}
+                style={{ ...baseBgStyle, filter: isExporting ? "none" : blurFilter }}
               >
                 <PatternRenderer pattern={activeCard.pattern} />
                 <CardNoise />
