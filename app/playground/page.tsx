@@ -1,4 +1,4 @@
-// import Environment3D from "../../components/playground/Environment3D";
+import Environment3D from "../../components/playground/Environment3D";
 import ActiveCard from "../../components/playground/ActiveCard";
 import CardDeck from "../../components/playground/CardDeck";
 import SidebarCustomizer from "../../components/playground/SidebarCustomizer";
@@ -10,7 +10,7 @@ export default function PlaygroundPage() {
         Stretches to the back of the entire screen. z-index 0.
       */}
       <div className="absolute inset-0 z-0 bg-linear-to-br from-zinc-900 to-black">
-        {/* <Environment3D /> */}
+        <Environment3D />
       </div>
 
       {/* LAYER 2: The DOM UI Overlay
