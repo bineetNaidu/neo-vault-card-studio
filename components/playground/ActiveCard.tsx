@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { useCardContext } from "../../context/CardContext";
 import { Card, CardTheme } from "../../types/card";
-import { RefreshCw, ShieldCheck } from "lucide-react";
+import { RefreshCw, ShieldCheck, Download, Loader2 } from "lucide-react";
 import { FaApple, FaCcVisa, FaCcMastercard, FaCcAmex } from "react-icons/fa";
+import { toPng } from 'html-to-image';
+import useSound from 'use-sound';
 
-// Import our new Hyper-Realistic Texture Engine
 import { CardNoise, PatternRenderer } from "./CardPatterns";
 
 const BankLogo = ({ type }: { type: string }) => {
@@ -23,7 +24,6 @@ const BankLogo = ({ type }: { type: string }) => {
 const themeStyles: Record<CardTheme, string> = {
   obsidian: "bg-gradient-to-br from-zinc-800 via-zinc-900 to-black text-zinc-100",
   frosted: "bg-white/10 text-white backdrop-blur-2xl border border-white/20",
-  // Added a 200% background size so we can gently animate the prism gradient
   prism: "bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 text-white bg-[length:200%_200%] animate-gradient-shift",
   custom: "text-white"
 };
@@ -31,6 +31,13 @@ const themeStyles: Record<CardTheme, string> = {
 export default function ActiveCard() {
   const { cards, activeCardId, focusedField, setFocusedField } = useCardContext();
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  
+  // The camera reference attached to our 3D container
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Audio Engine (Requires whoosh.mp3 in public folder, fails gracefully if missing)
+  const [playFlip] = useSound('/whoosh.mp3', { volume: 0.5 });
 
   const activeCard = cards.find((c) => c.id === activeCardId) || cards[0];
 
@@ -53,6 +60,38 @@ export default function ActiveCard() {
     y.set(145);
   }
 
+  const handleFlip = () => {
+    setIsFlipped(!isFlipped);
+    playFlip(); // Trigger tactile sound
+  };
+
+  // The Snapshot Engine
+  const handleExport = async () => {
+    if (!cardRef.current) return;
+    try {
+      setIsExporting(true);
+      
+      // Forces the image quality higher and handles CSS 3D better
+      const dataUrl = await toPng(cardRef.current, { 
+        cacheBust: true, 
+        pixelRatio: 3, // High-Res export
+        style: {
+          transform: 'none' // Reset outer container layout purely for the shot
+        }
+      });
+      
+      // Trigger native browser download
+      const link = document.createElement('a');
+      link.download = `neo-vault-${activeCard.id}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Failed to export image', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const getFocusStyle = (field: keyof Card) => {
     return focusedField === field
       ? "ring-1 ring-white/60 bg-white/10 shadow-[0_0_20px_rgba(255,255,255,0.2)] rounded-lg px-2 py-1 -mx-2 -my-1 transition-all duration-300"
@@ -66,7 +105,8 @@ export default function ActiveCard() {
   return (
     <div className="flex flex-col items-center gap-10 select-none">
       
-      <div className="relative w-[460px] h-[290px]" style={{ perspective: "1500px" }}>
+      {/* We attach the ref here. This is the exact bounding box it will photograph */}
+      <div ref={cardRef} className="relative w-[460px] h-[290px] p-4 -m-4" style={{ perspective: "1500px" }}>
         
         <motion.div
           onMouseMove={handleMouseMove}
@@ -99,21 +139,14 @@ export default function ActiveCard() {
                 className={`absolute inset-0 rounded-2xl overflow-hidden border border-white/10 shadow-inner ${themeStyles[activeCard.theme]}`}
                 style={baseBgStyle}
               >
-                {/* 1. Base Material Rendered First */}
-                
-                {/* 2. Hyper-Realistic Pattern Rendered Second */}
                 <PatternRenderer pattern={activeCard.pattern} />
-                
-                {/* 3. Physical Noise Grain Rendered Third */}
                 <CardNoise />
 
-                {/* 4. Mouse Lighting Sheen Rendered on Top */}
                 <motion.div 
                   style={{ background: `radial-gradient(circle at ${sheenX.get()} ${sheenY.get()}, rgba(255,255,255,0.2) 0%, transparent 60%)` }}
                   className="absolute inset-0 pointer-events-none z-30 mix-blend-overlay"
                 />
 
-                {/* 5. The Content */}
                 <div className="absolute inset-0 p-7 flex flex-col justify-between z-40">
                   <div className="flex justify-between items-start relative">
                     <div className={getFocusStyle("bankLogo")} onClick={() => setFocusedField("bankLogo")}>
@@ -184,13 +217,27 @@ export default function ActiveCard() {
         </motion.div>
       </div>
 
-      <button
-        onClick={() => setIsFlipped(!isFlipped)}
-        className="flex items-center gap-3 px-6 py-2.5 text-xs font-medium tracking-widest text-zinc-400 bg-zinc-900/80 backdrop-blur-md border border-white/5 rounded-full hover:bg-white/10 hover:text-white hover:border-white/20 transition-all duration-300 shadow-xl"
-      >
-        <RefreshCw size={14} className={`transition-transform duration-500 ${isFlipped ? "rotate-180" : ""}`} />
-        <span>FLIP CARD</span>
-      </button>
+      {/* Control Deck */}
+      <div className="flex items-center gap-4 z-50">
+        <button
+          onClick={handleFlip}
+          className="flex items-center gap-3 px-6 py-2.5 text-xs font-medium tracking-widest text-zinc-400 bg-zinc-900/80 backdrop-blur-md border border-white/5 rounded-full hover:bg-white/10 hover:text-white hover:border-white/20 transition-all duration-300 shadow-xl"
+        >
+          <RefreshCw size={14} className={`transition-transform duration-500 ${isFlipped ? "rotate-180" : ""}`} />
+          <span>FLIP CARD</span>
+        </button>
+
+        {/* New Export Button */}
+        <button
+          onClick={handleExport}
+          disabled={isExporting}
+          className="flex items-center gap-3 px-6 py-2.5 text-xs font-medium tracking-widest text-zinc-400 bg-zinc-900/80 backdrop-blur-md border border-white/5 rounded-full hover:bg-indigo-500/20 hover:text-indigo-300 hover:border-indigo-500/50 transition-all duration-300 shadow-xl disabled:opacity-50"
+        >
+          {isExporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+          <span>{isExporting ? "CAPTURING..." : "SNAPSHOT"}</span>
+        </button>
+      </div>
+
     </div>
   );
 }
