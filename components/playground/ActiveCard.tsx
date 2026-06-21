@@ -45,31 +45,36 @@ export default function ActiveCard() {
 
   const activeCard = cards.find((c) => c.id === activeCardId) || cards[0];
 
+  const CARD_WIDTH = 540;  // Increased from 460
+  const CARD_HEIGHT = 340; // Increased from 290
+
   // --- Mouse Tilt Physics ---
-  const x = useMotionValue(230);
-  const y = useMotionValue(145);
-  const rotateX = useTransform(y, [0, 290], [18, -18]);
-  const rotateY = useTransform(x, [0, 460], [-18, 18]);
+  // Start the mouse perfectly in the center of the new dimensions
+  const x = useMotionValue(CARD_WIDTH / 2);
+  const y = useMotionValue(CARD_HEIGHT / 2);
 
-  const sheenX = useTransform(x, [0, 460], ["-20%", "120%"]);
-  const sheenY = useTransform(y, [0, 290], ["-20%", "120%"]);
+  const rotateX = useTransform(y, [0, CARD_HEIGHT], [18, -18]);
+  const rotateY = useTransform(x, [0, CARD_WIDTH], [-18, 18]);
 
-  const shadowX = useTransform(x, [0, 460], [40, -40]);
-  const shadowY = useTransform(y, [0, 290], [40, -40]);
+  const sheenX = useTransform(x, [0, CARD_WIDTH], ["-20%", "120%"]);
+  const sheenY = useTransform(y, [0, CARD_HEIGHT], ["-20%", "120%"]);
 
-  // --- FEATURE 3 HOOKS (Hoisted safely to the top) ---
+  const shadowX = useTransform(x, [0, CARD_WIDTH], [40, -40]);
+  const shadowY = useTransform(y, [0, CARD_HEIGHT], [40, -40]);
+
+  // --- Haptics ---
   // Carbon
-  const carbonX = useTransform(x, [0, 460], ["0%", "-50%"]);
-  const carbonY = useTransform(y, [0, 290], ["0%", "-20%"]);
+  const carbonX = useTransform(x, [0, CARD_WIDTH], ["0%", "-50%"]);
+  const carbonY = useTransform(y, [0, CARD_HEIGHT], ["0%", "-20%"]);
   
   // Frosted
-  const frostedX = useTransform(x, [0, 460], [20, -20]);
-  const frostedY = useTransform(y, [0, 290], [20, -20]);
+  const frostedX = useTransform(x, [0, CARD_WIDTH], [20, -20]);
+  const frostedY = useTransform(y, [0, CARD_HEIGHT], [20, -20]);
   const frostedShadow = useMotionTemplate`inset ${frostedX}px ${frostedY}px 40px rgba(255, 255, 255, 0.15)`;
-  
+
   // Mesh
-  const meshX = useTransform(x, [0, 460], ["100%", "0%"]);
-  const meshY = useTransform(y, [0, 290], ["100%", "0%"]);
+  const meshX = useTransform(x, [0, CARD_WIDTH], ["100%", "0%"]);
+  const meshY = useTransform(y, [0, CARD_HEIGHT], ["100%", "0%"]);
   const meshGradient = useMotionTemplate`radial-gradient(circle at ${meshX} ${meshY}, rgba(0,0,0,0.5) 0%, transparent 60%)`;
 
   // --- Motion Blur Flip Physics ---
@@ -92,8 +97,8 @@ export default function ActiveCard() {
   }
 
   function handleMouseLeave() {
-    x.set(230);
-    y.set(145);
+    x.set(CARD_WIDTH / 2);
+    y.set(CARD_HEIGHT / 2);
   }
 
   const handleFlip = () => {
@@ -145,7 +150,7 @@ export default function ActiveCard() {
     ? { backgroundColor: activeCard.customColor || "#0f172a" } 
     : {};
 
-  // --- FEATURE 3: MATERIAL INTERACTION ENGINE ---
+  // --- MATERIAL INTERACTION ENGINE ---
   const renderMaterialEffects = () => (
     <>
       {activeCard.pattern === 'carbon' && (
@@ -177,7 +182,13 @@ export default function ActiveCard() {
 
   return (
     <div className="flex flex-col items-center gap-10 select-none">
-      <div ref={cardRef} className="relative w-[460px] h-[290px] p-4 -m-4" style={{ perspective: "1500px" }}>
+      <div ref={cardRef} 
+        className="relative p-4 -m-4" 
+        style={{ 
+          perspective: "1500px",
+          width: CARD_WIDTH, 
+          height: CARD_HEIGHT,
+        }}>
         <motion.div
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
