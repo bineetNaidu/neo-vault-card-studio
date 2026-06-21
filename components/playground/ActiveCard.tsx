@@ -1,7 +1,14 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { motion, useMotionValue, useTransform } from "framer-motion";
+import React, { useState, useRef, useEffect } from "react";
+import { 
+  motion, 
+  useMotionValue, 
+  useTransform, 
+  useSpring, 
+  useVelocity, 
+  useMotionTemplate 
+} from "framer-motion";
 import { useCardContext } from "../../context/CardContext";
 import { Card, CardTheme } from "../../types/card";
 import { RefreshCw, ShieldCheck, Download, Loader2 } from "lucide-react";
@@ -33,23 +40,35 @@ export default function ActiveCard() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   
-  // The camera reference attached to our 3D container
   const cardRef = useRef<HTMLDivElement>(null);
-
-  // Audio Engine (Requires whoosh.mp3 in public folder, fails gracefully if missing)
   const [playFlip] = useSound('/whoosh.mp3', { volume: 0.5 });
 
   const activeCard = cards.find((c) => c.id === activeCardId) || cards[0];
 
+  // --- Mouse Tilt Physics ---
   const x = useMotionValue(230);
   const y = useMotionValue(145);
   const rotateX = useTransform(y, [0, 290], [18, -18]);
   const rotateY = useTransform(x, [0, 460], [-18, 18]);
-  const shadowX = useTransform(x, [0, 460], [40, -40]);
-  const shadowY = useTransform(y, [0, 290], [40, -40]);
 
   const sheenX = useTransform(x, [0, 460], ["-20%", "120%"]);
   const sheenY = useTransform(y, [0, 290], ["-20%", "120%"]);
+
+  const shadowX = useTransform(x, [0, 460], [40, -40]);
+  const shadowY = useTransform(y, [0, 290], [40, -40]);
+
+  // --- Motion Blur Flip Physics ---
+  const flipSpring = useSpring(0, { stiffness: 90, damping: 20 });
+  const flipVelocity = useVelocity(flipSpring);
+  
+  // Maps the speed (up to 1500 deg/sec) to a blur value (up to 5px)
+  const dynamicBlur = useTransform(flipVelocity, [-1500, 0, 1500], [5, 0, 5]); 
+  const blurFilter = useMotionTemplate`blur(${dynamicBlur}px)`;
+
+  // Trigger the spring whenever the state changes
+  useEffect(() => {
+    flipSpring.set(isFlipped ? 180 : 0);
+  }, [isFlipped, flipSpring]);
 
   function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -64,27 +83,34 @@ export default function ActiveCard() {
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
-    playFlip(); // Trigger tactile sound
+    playFlip();
   };
 
-  // The Snapshot Engine
   const handleExport = async () => {
     if (!cardRef.current) return;
     try {
       setIsExporting(true);
-      
-      // Forces the image quality higher and handles CSS 3D better
-      const dataUrl = await toPng(cardRef.current, { 
+      const node = cardRef.current;
+      const scaleFactor = 4; 
+      const ultraHdWidth = node.offsetWidth * scaleFactor;
+      const ultraHdHeight = node.offsetHeight * scaleFactor;
+
+      const dataUrl = await toPng(node, { 
         cacheBust: true, 
-        pixelRatio: 3, // High-Res export
+        pixelRatio: 1, 
+        width: ultraHdWidth,
+        height: ultraHdHeight,
         style: {
-          transform: 'none' // Reset outer container layout purely for the shot
+          transform: `scale(${scaleFactor})`,
+          transformOrigin: 'top left',
+          width: `${node.offsetWidth}px`,
+          height: `${node.offsetHeight}px`,
+          margin: '0', 
         }
       });
       
-      // Trigger native browser download
       const link = document.createElement('a');
-      link.download = `neo-vault-${activeCard.id}.png`;
+      link.download = `neo-vault-${activeCard.id}-UltraHD.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -106,59 +132,51 @@ export default function ActiveCard() {
 
   return (
     <div className="flex flex-col items-center gap-10 select-none">
-      
-      {/* We attach the ref here. This is the exact bounding box it will photograph */}
       <div ref={cardRef} className="relative w-[460px] h-[290px] p-4 -m-4" style={{ perspective: "1500px" }}>
-        
-        {/* 1. OUTER SHELL: Handles Mouse Tracking */}
         <motion.div
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
           className="w-full h-full relative"
         >
-
           {/* Base Black Drop Shadow */}
           <div 
             className="absolute inset-0 rounded-2xl bg-black/60 blur-2xl pointer-events-none"
             style={{ transform: "translateZ(-30px)" }}
           />
 
+          {/* Dynamic Ambient Glow */}
           {studioLighting && (
             <motion.div
               className="absolute inset-0 rounded-2xl blur-[50px] opacity-60 pointer-events-none mix-blend-screen transition-colors duration-500"
               style={{
                 backgroundColor: 
                   activeCard.theme === 'custom' ? activeCard.customColor : 
-                  activeCard.theme === 'prism' ? '#c084fc' : // Purple glow
-                  activeCard.theme === 'frosted' ? '#e0f2fe' : // Icy blue glow
-                  'rgba(255,255,255,0.1)', // Subtle white for obsidian
+                  activeCard.theme === 'prism' ? '#c084fc' : 
+                  activeCard.theme === 'frosted' ? '#e0f2fe' : 
+                  'rgba(255,255,255,0.1)', 
                 transform: "translateZ(-50px)",
-                x: shadowX, // Using the top-level variable
-                y: shadowY, // Using the top-level variable
+                x: shadowX, 
+                y: shadowY, 
               }}
             />
           )}
 
+          {/* INNER CORE: Replaced `animate` with our custom `flipSpring` */}
           <motion.div
-            animate={{ rotateY: isFlipped ? 180 : 0 }}
-            transition={{ type: "spring", stiffness: 90, damping: 20 }}
-            style={{ transformStyle: "preserve-3d" }}
+            style={{ rotateY: flipSpring, transformStyle: "preserve-3d" }}
             className="absolute inset-0 w-full h-full"
           >
             
             {/* ================= FRONT FACE ================= */}
             <div 
               className="absolute inset-0"
-              style={{ 
-                backfaceVisibility: "hidden", 
-                WebkitBackfaceVisibility: "hidden",
-                transform: "translateZ(1px)"
-              }}
+              style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "translateZ(1px)" }}
             >
-              <div 
+              {/* Applied blurFilter inside the safe non-3D child container */}
+              <motion.div 
                 className={`absolute inset-0 rounded-2xl overflow-hidden border border-white/10 shadow-inner ${themeStyles[activeCard.theme]}`}
-                style={baseBgStyle}
+                style={{ ...baseBgStyle, filter: blurFilter }}
               >
                 <PatternRenderer pattern={activeCard.pattern} />
                 <CardNoise />
@@ -195,21 +213,18 @@ export default function ActiveCard() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
 
             {/* ================= BACK FACE ================= */}
             <div 
               className="absolute inset-0 text-white"
-              style={{ 
-                backfaceVisibility: "hidden", 
-                WebkitBackfaceVisibility: "hidden",
-                transform: "rotateY(180deg) translateZ(1px)",
-              }}
+              style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "rotateY(180deg) translateZ(1px)" }}
             >
-              <div 
+              {/* Applied blurFilter here as well */}
+              <motion.div 
                 className={`absolute inset-0 rounded-2xl overflow-hidden border border-white/10 shadow-inner ${themeStyles[activeCard.theme]}`}
-                style={baseBgStyle}
+                style={{ ...baseBgStyle, filter: blurFilter }}
               >
                 <PatternRenderer pattern={activeCard.pattern} />
                 <CardNoise />
@@ -231,7 +246,7 @@ export default function ActiveCard() {
                     </p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
 
           </motion.div>
