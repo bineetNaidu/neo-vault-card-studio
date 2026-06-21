@@ -2,6 +2,7 @@ import Environment3D from "../../components/playground/Environment3D";
 import ActiveCard from "../../components/playground/ActiveCard";
 import CardDeck from "../../components/playground/CardDeck";
 import SidebarCustomizer from "../../components/playground/SidebarCustomizer";
+import Link from "next/link";
 
 export default function PlaygroundPage() {
   return (
@@ -17,6 +18,16 @@ export default function PlaygroundPage() {
         pointer-events-none lets clicks pass through to the 3D canvas...
       */}
       <main className="relative z-10 flex h-full w-full pointer-events-none">
+
+      <div className="absolute top-6 left-8 z-50 pointer-events-auto">
+        <Link
+          href="/"
+          className="flex items-center gap-2 py-1 px-2 text-[10px] font-light tracking-[0.25em] uppercase text-zinc-500 border border-zinc-500 hover:text-white hover:border-zinc-200 transition-colors duration-300"
+        >
+          <span className="text-xs">←</span>
+          Neo-Vault
+        </Link>
+      </div>
         
         {/* Left/Center Split: Active Card & Bottom Deck */}
         {/* ...but we restore pointer-events-auto on the actual UI blocks */}
