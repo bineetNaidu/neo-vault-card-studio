@@ -1,7 +1,7 @@
 // import Environment3D from "../../components/playground/Environment3D";
 import ActiveCard from "../../components/playground/ActiveCard";
 import CardDeck from "../../components/playground/CardDeck";
-// import SidebarCustomizer from "../../components/playground/SidebarCustomizer";
+import SidebarCustomizer from "../../components/playground/SidebarCustomizer";
 
 export default function PlaygroundPage() {
   return (
@@ -42,12 +42,12 @@ export default function PlaygroundPage() {
 
         {/* Right Split: The Sidebar Studio Customizer */}
         <div className="w-[420px] border-l border-white/10 bg-black/40 backdrop-blur-2xl pointer-events-auto shadow-2xl">
-          {/* <SidebarCustomizer /> */}
-          <div className="p-8 h-full flex flex-col justify-center items-center text-center">
+          <SidebarCustomizer />
+          {/* <div className="p-8 h-full flex flex-col justify-center items-center text-center">
              <div className="border border-white/10 px-6 py-4 rounded-lg bg-white/5 backdrop-blur-sm">
                 <p className="text-zinc-500 font-mono text-sm tracking-widest">[ STUDIO SIDEBAR ]</p>
              </div>
-          </div>
+          </div> */}
         </div>
 
       </main>
