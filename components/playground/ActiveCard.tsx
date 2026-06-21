@@ -57,6 +57,21 @@ export default function ActiveCard() {
   const shadowX = useTransform(x, [0, 460], [40, -40]);
   const shadowY = useTransform(y, [0, 290], [40, -40]);
 
+  // --- FEATURE 3 HOOKS (Hoisted safely to the top) ---
+  // Carbon
+  const carbonX = useTransform(x, [0, 460], ["0%", "-50%"]);
+  const carbonY = useTransform(y, [0, 290], ["0%", "-20%"]);
+  
+  // Frosted
+  const frostedX = useTransform(x, [0, 460], [20, -20]);
+  const frostedY = useTransform(y, [0, 290], [20, -20]);
+  const frostedShadow = useMotionTemplate`inset ${frostedX}px ${frostedY}px 40px rgba(255, 255, 255, 0.15)`;
+  
+  // Mesh
+  const meshX = useTransform(x, [0, 460], ["100%", "0%"]);
+  const meshY = useTransform(y, [0, 290], ["100%", "0%"]);
+  const meshGradient = useMotionTemplate`radial-gradient(circle at ${meshX} ${meshY}, rgba(0,0,0,0.5) 0%, transparent 60%)`;
+
   // --- Motion Blur Flip Physics ---
   const flipSpring = useSpring(0, { stiffness: 90, damping: 20 });
   const flipVelocity = useVelocity(flipSpring);
@@ -130,6 +145,36 @@ export default function ActiveCard() {
     ? { backgroundColor: activeCard.customColor || "#0f172a" } 
     : {};
 
+  // --- FEATURE 3: MATERIAL INTERACTION ENGINE ---
+  const renderMaterialEffects = () => (
+    <>
+      {activeCard.pattern === 'carbon' && (
+        <motion.div
+          className="absolute inset-[-150%] pointer-events-none mix-blend-overlay z-10 opacity-40"
+          style={{
+            backgroundImage: "linear-gradient(115deg, transparent 45%, rgba(255,255,255,1) 50%, transparent 55%)",
+            x: carbonX,
+            y: carbonY,
+          }}
+        />
+      )}
+
+      {activeCard.theme === 'frosted' && (
+        <motion.div
+          className="absolute inset-0 pointer-events-none rounded-2xl z-20"
+          style={{ boxShadow: frostedShadow }}
+        />
+      )}
+
+      {activeCard.pattern === 'mesh' && (
+        <motion.div
+          className="absolute inset-0 pointer-events-none mix-blend-multiply z-10"
+          style={{ background: meshGradient }}
+        />
+      )}
+    </>
+  );
+
   return (
     <div className="flex flex-col items-center gap-10 select-none">
       <div ref={cardRef} className="relative w-[460px] h-[290px] p-4 -m-4" style={{ perspective: "1500px" }}>
@@ -162,7 +207,7 @@ export default function ActiveCard() {
             />
           )}
 
-          {/* INNER CORE: Replaced `animate` with our custom `flipSpring` */}
+          {/* INNER CORE: Replaced `animate` with custom `flipSpring` */}
           <motion.div
             style={{ rotateY: flipSpring, transformStyle: "preserve-3d" }}
             className="absolute inset-0 w-full h-full"
@@ -180,6 +225,9 @@ export default function ActiveCard() {
               >
                 <PatternRenderer pattern={activeCard.pattern} />
                 <CardNoise />
+                
+                {/* INJECT MATERIAL EFFECTS HERE */}
+                {renderMaterialEffects()}
 
                 <motion.div 
                   style={{ background: `radial-gradient(circle at ${sheenX.get()} ${sheenY.get()}, rgba(255,255,255,0.2) 0%, transparent 60%)` }}
@@ -228,6 +276,9 @@ export default function ActiveCard() {
               >
                 <PatternRenderer pattern={activeCard.pattern} />
                 <CardNoise />
+                
+                {/* INJECT MATERIAL EFFECTS HERE */}
+                {renderMaterialEffects()}
 
                 <div className="w-full h-14 bg-black absolute left-0 top-8 shadow-inner z-20" />
                 
@@ -253,7 +304,6 @@ export default function ActiveCard() {
         </motion.div>
       </div>
 
-      {/* Control Deck */}
       <div className="flex items-center gap-4 z-50">
         <button
           onClick={handleFlip}
@@ -263,7 +313,6 @@ export default function ActiveCard() {
           <span>FLIP CARD</span>
         </button>
 
-        {/* New Export Button */}
         <button
           onClick={handleExport}
           disabled={isExporting}
@@ -273,7 +322,6 @@ export default function ActiveCard() {
           <span>{isExporting ? "CAPTURING..." : "SNAPSHOT"}</span>
         </button>
       </div>
-
     </div>
   );
 }
