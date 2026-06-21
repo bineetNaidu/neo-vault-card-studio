@@ -1,8 +1,6 @@
-import React from "react";
-
 // import Environment3D from "../../components/playground/Environment3D";
 import ActiveCard from "../../components/playground/ActiveCard";
-// import CardDeck from "../../components/playground/CardDeck";
+import CardDeck from "../../components/playground/CardDeck";
 // import SidebarCustomizer from "../../components/playground/SidebarCustomizer";
 
 export default function PlaygroundPage() {
@@ -34,10 +32,10 @@ export default function PlaygroundPage() {
 
           {/* Bottom 25%: The Wallet Stack */}
           <div className="h-56 flex items-end justify-center pb-8">
-             {/* <CardDeck /> */}
-             <div className="border border-white/10 px-6 py-4 rounded-lg bg-white/5 backdrop-blur-sm">
+             <CardDeck />
+             {/* <div className="border border-white/10 px-6 py-4 rounded-lg bg-white/5 backdrop-blur-sm">
                 <p className="text-zinc-500 font-mono text-xs tracking-widest">[ WALLET DECK STACK ]</p>
-             </div>
+             </div> */}
           </div>
 
         </div>
