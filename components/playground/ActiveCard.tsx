@@ -3,11 +3,13 @@
 import React, { useState } from "react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { useCardContext } from "../../context/CardContext";
-import { Card, CardTheme, CardPattern } from "../../types/card";
+import { Card, CardTheme } from "../../types/card";
 import { RefreshCw, ShieldCheck } from "lucide-react";
 import { FaApple, FaCcVisa, FaCcMastercard, FaCcAmex } from "react-icons/fa";
 
-// Pixel-perfect Brand Logos
+// Import our new Hyper-Realistic Texture Engine
+import { CardNoise, PatternRenderer } from "./CardPatterns";
+
 const BankLogo = ({ type }: { type: string }) => {
   switch (type) {
     case "apple": return <FaApple size={28} />;
@@ -18,18 +20,11 @@ const BankLogo = ({ type }: { type: string }) => {
   }
 };
 
-// Premium Textures using SVG Data URIs
-const PATTERNS: Record<CardPattern, string> = {
-  none: "",
-  carbon: "url(\"data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 6H0V0h6v6zM0 12h6V6H0v6zm6 0h6V6H6v6zm0-12h6v6H6V0z' fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E\")",
-  topo: "url(\"data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5z' fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E\")",
-  mesh: "url(\"data:image/svg+xml,%3Csvg width='20' height='35' viewBox='0 0 20 35' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 0l10 17.5L10 35 0 17.5 10 0zm0 32.5l8-15-8-15-8 15 8 15z' fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E\")"
-};
-
 const themeStyles: Record<CardTheme, string> = {
   obsidian: "bg-gradient-to-br from-zinc-800 via-zinc-900 to-black text-zinc-100",
   frosted: "bg-white/10 text-white backdrop-blur-2xl border border-white/20",
-  prism: "bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 text-white",
+  // Added a 200% background size so we can gently animate the prism gradient
+  prism: "bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 text-white bg-[length:200%_200%] animate-gradient-shift",
   custom: "text-white"
 };
 
@@ -71,23 +66,19 @@ export default function ActiveCard() {
   return (
     <div className="flex flex-col items-center gap-10 select-none">
       
-      {/* STATIC CAMERA: Holds the perspective so the 3D doesn't warp */}
       <div className="relative w-[460px] h-[290px]" style={{ perspective: "1500px" }}>
         
-        {/* 1. OUTER SHELL: Handles Mouse Tracking */}
         <motion.div
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
           className="w-full h-full relative"
         >
-          {/* ISOLATED SHADOW: Pushed -30px back into 3D space so it doesn't break the CSS flipper */}
           <div 
             className="absolute inset-0 rounded-2xl bg-black/60 blur-2xl pointer-events-none"
             style={{ transform: "translateZ(-30px)" }}
           />
 
-          {/* 2. INNER CORE: Handles the 180 Flip independently */}
           <motion.div
             animate={{ rotateY: isFlipped ? 180 : 0 }}
             transition={{ type: "spring", stiffness: 90, damping: 20 }}
@@ -101,19 +92,29 @@ export default function ActiveCard() {
               style={{ 
                 backfaceVisibility: "hidden", 
                 WebkitBackfaceVisibility: "hidden",
-                transform: "translateZ(1px)" // FIX: Pushes the front face 1px OUT to prevent Z-fighting
+                transform: "translateZ(1px)"
               }}
             >
               <div 
                 className={`absolute inset-0 rounded-2xl overflow-hidden border border-white/10 shadow-inner ${themeStyles[activeCard.theme]}`}
-                style={{ ...baseBgStyle, backgroundImage: PATTERNS[activeCard.pattern || "none"] }}
+                style={baseBgStyle}
               >
+                {/* 1. Base Material Rendered First */}
+                
+                {/* 2. Hyper-Realistic Pattern Rendered Second */}
+                <PatternRenderer pattern={activeCard.pattern} />
+                
+                {/* 3. Physical Noise Grain Rendered Third */}
+                <CardNoise />
+
+                {/* 4. Mouse Lighting Sheen Rendered on Top */}
                 <motion.div 
-                  style={{ background: `radial-gradient(circle at ${sheenX.get()} ${sheenY.get()}, rgba(255,255,255,0.15) 0%, transparent 60%)` }}
+                  style={{ background: `radial-gradient(circle at ${sheenX.get()} ${sheenY.get()}, rgba(255,255,255,0.2) 0%, transparent 60%)` }}
                   className="absolute inset-0 pointer-events-none z-30 mix-blend-overlay"
                 />
 
-                <div className="absolute inset-0 p-7 flex flex-col justify-between z-10">
+                {/* 5. The Content */}
+                <div className="absolute inset-0 p-7 flex flex-col justify-between z-40">
                   <div className="flex justify-between items-start relative">
                     <div className={getFocusStyle("bankLogo")} onClick={() => setFocusedField("bankLogo")}>
                       <BankLogo type={activeCard.bankLogo} />
@@ -149,16 +150,16 @@ export default function ActiveCard() {
               style={{ 
                 backfaceVisibility: "hidden", 
                 WebkitBackfaceVisibility: "hidden",
-                transform: "rotateY(180deg) translateZ(1px)", // FIX: Spins it backwards AND pushes it 1px OUT the other way
+                transform: "rotateY(180deg) translateZ(1px)",
               }}
             >
-              <div 
-                className="absolute inset-0 rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800"
-                style={{ backgroundImage: PATTERNS[activeCard.pattern || "none"] }}
-              >
-                <div className="w-full h-14 bg-black absolute left-0 top-8 shadow-inner" />
+              <div className="absolute inset-0 rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800">
+                <PatternRenderer pattern={activeCard.pattern} />
+                <CardNoise />
+
+                <div className="w-full h-14 bg-black absolute left-0 top-8 shadow-inner z-20" />
                 
-                <div className="absolute inset-0 p-7 flex flex-col justify-between z-10">
+                <div className="absolute inset-0 p-7 flex flex-col justify-between z-40">
                   <div className="mt-20 flex items-center justify-end gap-4 w-full relative">
                     <span className="text-[10px] tracking-widest uppercase opacity-40">Security Code</span>
                     <div className={`${getFocusStyle("cvv")} bg-white text-black font-mono text-sm px-4 py-2 rounded font-bold tracking-widest shadow-inner h-10 flex items-center justify-center`} onClick={() => setFocusedField("cvv")}>
@@ -180,7 +181,6 @@ export default function ActiveCard() {
         </motion.div>
       </div>
 
-      {/* Tactile Flip Control Button */}
       <button
         onClick={() => setIsFlipped(!isFlipped)}
         className="flex items-center gap-3 px-6 py-2.5 text-xs font-medium tracking-widest text-zinc-400 bg-zinc-900/80 backdrop-blur-md border border-white/5 rounded-full hover:bg-white/10 hover:text-white hover:border-white/20 transition-all duration-300 shadow-xl"
