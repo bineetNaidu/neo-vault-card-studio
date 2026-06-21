@@ -1,8 +1,7 @@
 import React from "react";
 
-// We will build and uncomment these in the next steps:
 // import Environment3D from "../../components/playground/Environment3D";
-// import ActiveCard from "../../components/playground/ActiveCard";
+import ActiveCard from "../../components/playground/ActiveCard";
 // import CardDeck from "../../components/playground/CardDeck";
 // import SidebarCustomizer from "../../components/playground/SidebarCustomizer";
 
@@ -12,7 +11,7 @@ export default function PlaygroundPage() {
       {/* LAYER 1: The 3D Environment Canvas 
         Stretches to the back of the entire screen. z-index 0.
       */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-br from-zinc-900 to-black">
+      <div className="absolute inset-0 z-0 bg-linear-to-br from-zinc-900 to-black">
         {/* <Environment3D /> */}
       </div>
 
@@ -27,10 +26,10 @@ export default function PlaygroundPage() {
           
           {/* Top 75%: Center Stage for the Active Card */}
           <div className="flex-1 flex items-center justify-center">
-             {/* <ActiveCard /> */}
-             <div className="border border-white/10 px-6 py-4 rounded-lg bg-white/5 backdrop-blur-sm">
+             <ActiveCard />
+             {/* <div className="border border-white/10 px-6 py-4 rounded-lg bg-white/5 backdrop-blur-sm">
                 <p className="text-zinc-400 font-mono text-sm tracking-widest">[ CENTER STAGE ACTIVE CARD ]</p>
-             </div>
+             </div> */}
           </div>
 
           {/* Bottom 25%: The Wallet Stack */}
