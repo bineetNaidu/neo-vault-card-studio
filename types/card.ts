@@ -21,4 +21,7 @@ export interface CardContextType {
   updateActiveCard: (field: keyof Card, value: string) => void;
   setFocusedField: (field: keyof Card | null) => void;
   addNewCard: (initialTheme: CardTheme) => void;
+
+  studioLighting: boolean; 
+  setStudioLighting: (val: boolean) => void;
 }

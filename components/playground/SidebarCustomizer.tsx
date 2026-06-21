@@ -4,7 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useCardContext } from "../../context/CardContext";
 import { CardTheme, CardPattern, Card } from "../../types/card";
-import { CreditCard, Fingerprint, Type, Calendar, Hash, Palette, Landmark, Layers, Pipette } from "lucide-react";
+import { CreditCard, Fingerprint, Type, Calendar, Hash, Palette, Landmark, Layers, Pipette, Zap } from "lucide-react";
 
 const THEMES: { id: CardTheme; label: string; bg: string }[] = [
   { id: "obsidian", label: "Obsidian Matte", bg: "bg-zinc-900" },
@@ -28,7 +28,7 @@ const LOGOS = [
 ];
 
 export default function SidebarCustomizer() {
-  const { cards, activeCardId, updateActiveCard, focusedField, setFocusedField } = useCardContext();
+  const { cards, activeCardId, updateActiveCard, focusedField, setFocusedField, setStudioLighting, studioLighting } = useCardContext();
   
   const activeCard = cards.find((c) => c.id === activeCardId);
 
@@ -73,12 +73,26 @@ export default function SidebarCustomizer() {
   return (
     <div className="h-full w-full flex flex-col p-6 overflow-y-auto no-scrollbar pb-24">
       
-      <div className="mb-8">
-        <h2 className="text-xl font-light tracking-tight flex items-center gap-3">
-          <Fingerprint className="text-zinc-500" />
-          Studio Configuration
-        </h2>
-        <p className="text-xs text-zinc-500 mt-2 font-mono tracking-wider">ID: {activeCard.id}</p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h2 className="text-xl font-light tracking-tight flex items-center gap-3">
+            <Fingerprint className="text-zinc-500" />
+            Studio Config
+          </h2>
+          <p className="text-xs text-zinc-500 mt-2 font-mono tracking-wider">ID: {activeCard.id}</p>
+        </div>
+        
+        <button
+          onClick={() => setStudioLighting(!studioLighting)}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-bold border transition-all duration-300 ${
+            studioLighting 
+              ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]' 
+              : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:text-zinc-300'
+          }`}
+        >
+          <Zap size={12} className={studioLighting ? 'fill-indigo-400' : ''} />
+          Ambient Glow
+        </button>
       </div>
 
       <div className="space-y-8">
@@ -180,7 +194,7 @@ export default function SidebarCustomizer() {
           </motion.div>
         </div>
 
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-4" />
+        <div className="h-px w-full bg-linear-to-r from-transparent via-white/10 to-transparent my-4" />
 
         {/* --- TEXT CONFIGURATION --- */}
         <div className="space-y-6">

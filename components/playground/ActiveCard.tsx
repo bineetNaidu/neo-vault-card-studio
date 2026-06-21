@@ -29,7 +29,7 @@ const themeStyles: Record<CardTheme, string> = {
 };
 
 export default function ActiveCard() {
-  const { cards, activeCardId, focusedField, setFocusedField } = useCardContext();
+  const { cards, activeCardId, focusedField, setFocusedField, studioLighting } = useCardContext();
   const [isFlipped, setIsFlipped] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   
@@ -45,6 +45,8 @@ export default function ActiveCard() {
   const y = useMotionValue(145);
   const rotateX = useTransform(y, [0, 290], [18, -18]);
   const rotateY = useTransform(x, [0, 460], [-18, 18]);
+  const shadowX = useTransform(x, [0, 460], [40, -40]);
+  const shadowY = useTransform(y, [0, 290], [40, -40]);
 
   const sheenX = useTransform(x, [0, 460], ["-20%", "120%"]);
   const sheenY = useTransform(y, [0, 290], ["-20%", "120%"]);
@@ -108,16 +110,35 @@ export default function ActiveCard() {
       {/* We attach the ref here. This is the exact bounding box it will photograph */}
       <div ref={cardRef} className="relative w-[460px] h-[290px] p-4 -m-4" style={{ perspective: "1500px" }}>
         
+        {/* 1. OUTER SHELL: Handles Mouse Tracking */}
         <motion.div
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
           className="w-full h-full relative"
         >
+
+          {/* Base Black Drop Shadow */}
           <div 
             className="absolute inset-0 rounded-2xl bg-black/60 blur-2xl pointer-events-none"
             style={{ transform: "translateZ(-30px)" }}
           />
+
+          {studioLighting && (
+            <motion.div
+              className="absolute inset-0 rounded-2xl blur-[50px] opacity-60 pointer-events-none mix-blend-screen transition-colors duration-500"
+              style={{
+                backgroundColor: 
+                  activeCard.theme === 'custom' ? activeCard.customColor : 
+                  activeCard.theme === 'prism' ? '#c084fc' : // Purple glow
+                  activeCard.theme === 'frosted' ? '#e0f2fe' : // Icy blue glow
+                  'rgba(255,255,255,0.1)', // Subtle white for obsidian
+                transform: "translateZ(-50px)",
+                x: shadowX, // Using the top-level variable
+                y: shadowY, // Using the top-level variable
+              }}
+            />
+          )}
 
           <motion.div
             animate={{ rotateY: isFlipped ? 180 : 0 }}

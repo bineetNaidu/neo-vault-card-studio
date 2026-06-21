@@ -42,6 +42,7 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
   const [cards, setCards] = useState<Card[]>(defaultCards);
   const [activeCardId, setActiveCardId] = useState<string>(defaultCards[0].id);
   const [focusedField, setFocusedField] = useState<keyof Card | null>(null);
+  const [studioLighting, setStudioLighting] = useState(true); // Default to true because it looks amazing
 
   const setActiveCard = (id: string) => setActiveCardId(id);
 
@@ -78,6 +79,8 @@ export function CardProvider({ children }: { children: React.ReactNode }) {
         updateActiveCard,
         setFocusedField,
         addNewCard,
+        studioLighting,
+        setStudioLighting,
       }}
     >
       {children}
