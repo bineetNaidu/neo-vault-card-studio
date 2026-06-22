@@ -43,7 +43,7 @@ export default function CardDeck() {
       */}
       <div 
         ref={scrollContainerRef}
-        className="flex w-full overflow-x-auto no-scrollbar items-center py-10 px-12 mask-[linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]"
+        className="flex w-full overflow-x-auto no-scrollbar items-center py-10 px-6 md:px-12 mask-[linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]"
       >
         {/* min-w-max prevents flex children from being squished when the container gets full */}
         <motion.div layout className="flex items-center min-w-max pr-8">
@@ -63,13 +63,15 @@ export default function CardDeck() {
                 onClick={() => setActiveCard(card.id)}
                 style={{
                   ...baseBgStyle,
-                  marginLeft: index === 0 ? "0px" : "-30px",
+                  /* CHANGED: Slightly tighter overlap on mobile */
+                  marginLeft: index === 0 ? "0px" : "-20px",
                   zIndex: isActive ? 40 : cards.length - index,
                 }}
+                /* CHANGED: Added responsive width/height classes to shrink inactive and active cards on mobile */
                 className={`relative cursor-pointer rounded-xl shrink-0 transition-all duration-500 ease-out group overflow-hidden ${
                   isActive
-                    ? "w-48 h-28 scale-110 shadow-[0_15px_30px_rgba(0,0,0,0.5)] ring-1 ring-white/40 -translate-y-4"
-                    : "w-40 h-24 scale-90 opacity-40 hover:opacity-100 hover:-translate-y-6 hover:z-50 shadow-xl"
+                    ? "w-36 h-20 md:w-48 md:h-28 scale-110 shadow-[0_15px_30px_rgba(0,0,0,0.5)] ring-1 ring-white/40 -translate-y-2 md:-translate-y-4"
+                    : "w-28 h-16 md:w-40 md:h-24 scale-90 opacity-40 hover:opacity-100 hover:-translate-y-4 md:hover:-translate-y-6 hover:z-50 shadow-xl"
                 } ${miniThemes[card.theme]}`}
               >
                 {/* Background Pattern Sync */}
@@ -80,19 +82,19 @@ export default function CardDeck() {
                 </div>
 
                 {/* Mini Card Thumbnail Content */}
-                <div className="absolute inset-0 p-4 flex flex-col justify-between z-10">
+                <div className="absolute inset-0 p-3 md:p-4 flex flex-col justify-between z-10">
                   <div className="flex justify-between items-start">
                     {/* Abstract Logo Dot */}
-                    <div className="w-4 h-4 bg-white/40 rounded-full" /> 
+                    <div className="w-3 h-3 md:w-4 md:h-4 bg-white/40 rounded-full" /> 
                     {/* Abstract Chip */}
-                    <div className="w-5 h-4 bg-linear-to-br from-yellow-200 to-amber-500 rounded opacity-80" />
+                    <div className="w-4 h-3 md:w-5 md:h-4 bg-linear-to-br from-yellow-200 to-amber-500 rounded opacity-80" />
                   </div>
                   
                   <div className="mt-auto">
-                    <p className="text-[10px] font-mono tracking-widest text-white/90 drop-shadow-md">
+                    <p className="text-[8px] md:text-[10px] font-mono tracking-widest text-white/90 drop-shadow-md">
                       •••• {card.cardNumber.slice(-4) || "0000"}
                     </p>
-                    <p className="text-[8px] font-medium text-white/60 truncate uppercase tracking-wider mt-1 drop-shadow-md">
+                    <p className="text-[6px] md:text-[8px] font-medium text-white/60 truncate uppercase tracking-wider mt-1 drop-shadow-md">
                       {card.cardHolder || "HOLDER"}
                     </p>
                   </div>
@@ -105,7 +107,7 @@ export default function CardDeck() {
           <motion.button
             layout
             onClick={handleAddNewCard}
-            className="w-12 h-20 ml-8 shrink-0 rounded-xl border border-dashed border-zinc-700 text-zinc-500 flex items-center justify-center hover:border-white/50 hover:text-white transition-all duration-300 bg-black/40 hover:bg-white/10 backdrop-blur-sm group z-10 relative"
+            className="w-10 h-16 md:w-12 md:h-20 ml-4 md:ml-8 shrink-0 rounded-xl border border-dashed border-zinc-700 text-zinc-500 flex items-center justify-center hover:border-white/50 hover:text-white transition-all duration-300 bg-black/40 hover:bg-white/10 backdrop-blur-sm group z-10 relative"
           >
             <Plus size={18} className="group-hover:scale-125 transition-transform duration-300" />
           </motion.button>
