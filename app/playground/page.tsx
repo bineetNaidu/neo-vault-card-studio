@@ -43,7 +43,7 @@ export default function PlaygroundPage() {
           
           {/* Top 75%: Center Stage for the Active Card */}
          {/* Aggressively increased the upward translate (-20vh) and reduced scale to 75% so it completely clears the drawer */}
-         <div className={`flex-1 flex items-center justify-center transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] md:origin-center ${
+         <div className={`flex-1 flex items-center justify-center transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] md:origin-center will-change-transform transform-gpu ${
             isConfigDrawerOpen || isWalletDrawerOpen 
               ? 'translate-y-[-22vh] scale-[0.80] md:scale-100 md:translate-y-0' 
               : 'pt-20'
@@ -76,7 +76,7 @@ export default function PlaygroundPage() {
       </main> 
 
       {/* Mobile Dual-Pill Navigation Dock */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 md:hidden z-50 pointer-events-auto flex items-center bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl p-1.5">
+      <div className="fixed bottom-6 mb-[env(safe-area-inset-bottom)] left-1/2 -translate-x-1/2 md:hidden z-50 pointer-events-auto flex items-center bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl p-1.5">
         <button 
           onClick={() => { setIsWalletDrawerOpen(true); setIsConfigDrawerOpen(false); }}
           className="flex items-center gap-2 px-5 py-2.5 rounded-full text-[10px] font-bold tracking-widest text-zinc-400 hover:text-white hover:bg-white/10 transition-all"
@@ -144,7 +144,7 @@ export default function PlaygroundPage() {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-70 bg-zinc-950/95 backdrop-blur-3xl border-t border-white/10 rounded-t-3xl shadow-[0_-20px_50px_rgba(0,0,0,0.5)] pointer-events-auto md:hidden flex flex-col"
+            className="fixed inset-x-0 bottom-0 z-70 max-h-[55vh] bg-zinc-950/95 backdrop-blur-3xl border-t border-white/10 rounded-t-3xl shadow-[0_-20px_50px_rgba(0,0,0,0.5)] overflow-y-auto no-scrollbar will-change-transform pointer-events-auto md:hidden flex flex-col"
           >
             <div className="flex items-center justify-between p-6 border-b border-white/5">
               <span className="text-sm font-medium tracking-widest text-zinc-400 uppercase">Your Vault</span>
@@ -155,7 +155,7 @@ export default function PlaygroundPage() {
                 <X size={16} className="text-white" />
               </button>
             </div>
-            <div className="pb-8 pt-2">
+            <div className="pb-[calc(2rem+env(safe-area-inset-bottom))] pt-2">
               <CardDeck />
             </div>
           </motion.div>
