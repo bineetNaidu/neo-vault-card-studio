@@ -101,6 +101,28 @@ export default function ActiveCard() {
     y.set(CARD_HEIGHT / 2);
   }
 
+  // --- ADDED: Mobile Touch Handlers ---
+  function handleTouchMove(event: React.TouchEvent<HTMLDivElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const touch = event.touches[0];
+    
+    // Calculate the raw unscaled coordinates
+    let touchX = touch.clientX - rect.left;
+    let touchY = touch.clientY - rect.top;
+
+    // We must reverse-engineer the CSS scaling factor so the physics 
+    // constraints aren't broken by the scale-[0.65] wrapper.
+    const currentScale = rect.width / CARD_WIDTH;
+    
+    x.set(touchX / currentScale);
+    y.set(touchY / currentScale);
+  }
+
+  function handleTouchEnd() {
+    x.set(CARD_WIDTH / 2);
+    y.set(CARD_HEIGHT / 2);
+  }
+
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
     playFlip();
@@ -190,7 +212,8 @@ export default function ActiveCard() {
   return (
     <div className="flex flex-col items-center gap-10 select-none">
       <div ref={cardRef} 
-        className="relative p-4 -m-4" 
+        /* CHANGED: Added CSS scaling and origin shifting for responsive sizing without breaking math */
+        className="relative p-4 -m-4 scale-[0.65] sm:scale-[0.8] md:scale-100 origin-top md:origin-center transition-transform duration-500" 
         style={{ 
           perspective: isExporting ? "none" : "1500px", // Flattens the camera
           width: CARD_WIDTH, 
@@ -199,12 +222,15 @@ export default function ActiveCard() {
         <motion.div
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
+          onTouchMove={handleTouchMove} // ADDED
+          onTouchEnd={handleTouchEnd}   // ADDED
           style={{ 
             rotateX: isExporting ? 0 : rotateX, 
             rotateY: isExporting ? 0 : rotateY, 
             transformStyle: isExporting ? "flat" : "preserve-3d" // Flattens outer shell 
            }}
-          className="w-full h-full relative"
+          /* CHANGED: Added 'touch-none' to prevent mobile browser scroll-hijacking */
+          className="w-full h-full relative touch-none"
         >
           {/* Base Black Drop Shadow */}
           <div 
@@ -339,10 +365,13 @@ export default function ActiveCard() {
         </motion.div>
       </div>
 
-      <div className="flex items-center gap-4 z-50">
+      {/* The Action buttons remain here for now. 
+          We will wrap them in a sticky toolbar in Phase 4. */}
+      {/* CHANGED: Made buttons fixed to the bottom on mobile, absolute/static on desktop */}
+      <div className="fixed bottom-24 md:static flex items-center justify-center gap-2 md:gap-4 z-50 w-full left-0 px-4 md:px-0 md:w-auto pointer-events-auto">
         <button
           onClick={handleFlip}
-          className="flex items-center gap-3 px-6 py-2.5 text-xs font-medium tracking-widest text-zinc-400 bg-zinc-900/80 backdrop-blur-md border border-white/5 rounded-full hover:bg-white/10 hover:text-white hover:border-white/20 transition-all duration-300 shadow-xl"
+          className="flex items-center justify-center gap-2 md:gap-3 flex-1 md:flex-none px-4 md:px-6 py-3 md:py-2.5 text-[10px] md:text-xs font-medium tracking-widest text-zinc-400 bg-zinc-900/90 backdrop-blur-md border border-white/10 md:border-white/5 rounded-full hover:bg-white/10 hover:text-white hover:border-white/20 transition-all duration-300 shadow-2xl md:shadow-xl"
         >
           <RefreshCw size={14} className={`transition-transform duration-500 ${isFlipped ? "rotate-180" : ""}`} />
           <span>FLIP CARD</span>
@@ -351,7 +380,7 @@ export default function ActiveCard() {
         <button
           onClick={handleExport}
           disabled={isExporting}
-          className="flex items-center gap-3 px-6 py-2.5 text-xs font-medium tracking-widest text-zinc-400 bg-zinc-900/80 backdrop-blur-md border border-white/5 rounded-full hover:bg-indigo-500/20 hover:text-indigo-300 hover:border-indigo-500/50 transition-all duration-300 shadow-xl disabled:opacity-50"
+          className="flex items-center justify-center gap-2 md:gap-3 flex-1 md:flex-none px-4 md:px-6 py-3 md:py-2.5 text-[10px] md:text-xs font-medium tracking-widest text-zinc-400 bg-zinc-900/90 backdrop-blur-md border border-white/10 md:border-white/5 rounded-full hover:bg-indigo-500/20 hover:text-indigo-300 hover:border-indigo-500/50 transition-all duration-300 shadow-2xl md:shadow-xl disabled:opacity-50"
         >
           {isExporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
           <span>{isExporting ? "CAPTURING..." : "SNAPSHOT"}</span>
